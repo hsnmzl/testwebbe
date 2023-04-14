@@ -1,187 +1,105 @@
-import { Repository } from 'typeorm';
-import { Event } from './entities/event.entity';
+import { MenuItem } from './entities/menu-item.entity';
+import { Repository } from "typeorm";
 import App from "../../app";
 
+export class MenuItemsService {
 
-export class EventsService {
-  private eventRepository: Repository<Event>;
+  private menuItemRepository: Repository<MenuItem>;
 
   constructor(app: App) {
-    this.eventRepository = app.getDataSource().getRepository(Event);
+    this.menuItemRepository = app.getDataSource().getRepository(MenuItem);
   }
 
-  async getWarmupEvents() {
-    return await this.eventRepository.find();
-  }
-
-  /* TODO: complete getEventsWithWorkshops so that it returns all events including the workshops
+  /* TODO: complete getMenuItems so that it returns a nested menu structure
     Requirements:
-    - maximum 2 sql queries
+    - your code should result in EXACTLY one SQL query no matter the nesting level or the amount of menu items.
+    - it should work for infinite level of depth (children of childrens children of childrens children, ...)
     - verify your solution with `npm run test`
     - do a `git commit && git push` after you are done or when the time limit is over
-    - Don't post process query result in javascript
+    - post process your results in javascript
     Hints:
-    - open the `src/events/events.service` file
+    - open the `src/menu-items/menu-items.service.ts` file
     - partial or not working answers also get graded so make sure you commit what you have
-    Sample response on GET /events/events:
-    ```json
-    [
-      {
-        id: 1,
-        name: 'Laravel convention 2021',
-        createdAt: '2021-04-25T09:32:27.000000Z',
-        workshops: [
-          {
-            id: 1,
-            start: '2021-02-21 10:00:00',
-            end: '2021-02-21 16:00:00',
-            eventId: 1,
-            name: 'Illuminate your knowledge of the laravel code base',
-            createdAt: '2021-04-25T09:32:27.000000Z',
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: 'Laravel convention 2023',
-        createdAt: '2023-04-25T09:32:27.000000Z',
-        workshops: [
-          {
-            id: 2,
-            start: '2023-10-21 10:00:00',
-            end: '2023-10-21 18:00:00',
-            eventId: 2,
-            name: 'The new Eloquent - load more with less',
-            createdAt: '2021-04-25T09:32:27.000000Z',
-          },
-          {
-            id: 3,
-            start: '2023-11-21 09:00:00',
-            end: '2023-11-21 17:00:00',
-            eventId: 2,
-            name: 'AutoEx - handles exceptions 100% automatic',
-            createdAt: '2021-04-25T09:32:27.000000Z',
-          },
-        ],
-      },
-      {
-        id: 3,
-        name: 'React convention 2023',
-        createdAt: '2023-04-25T09:32:27.000000Z',
-        workshops: [
-          {
-            id: 4,
-            start: '2023-08-21 10:00:00',
-            end: '2023-08-21 18:00:00',
-            eventId: 3,
-            name: '#NoClass pure functional programming',
-            createdAt: '2021-04-25T09:32:27.000000Z',
-          },
-          {
-            id: 5,
-            start: '2023-08-21 09:00:00',
-            end: '2023-08-21 17:00:00',
-            eventId: 3,
-            name: 'Navigating the function jungle',
-            createdAt: '2021-04-25T09:32:27.000000Z',
-          },
-        ],
-      },
-    ]
-    ```
-     */
-
-    async getEventsWithWorkshops() {
-      return await this.eventRepository.createQueryBuilder('event')
-        .leftJoinAndSelect('event.workshops', 'workshop')
-        .getMany();
-    }
-
-  /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
-    Requirements:
-    - only events that have not yet started should be included
-    - the event starting time is determined by the first workshop of the event
-    - the code should result in maximum 3 SQL queries, no matter the amount of events
-    - all filtering of records should happen in the database
-    - verify your solution with `npm run test`
-    - do a `git commit && git push` after you are done or when the time limit is over
-    - Don't post process query result in javascript
-    Hints:
-    - open the `src/events/events.service.ts` file
-    - partial or not working answers also get graded so make sure you commit what you have
-    - join, whereIn, min, groupBy, havingRaw might be helpful
-    - in the sample data set  the event with id 1 is already in the past and should therefore be excluded
-    Sample response on GET /futureevents:
+    Sample response on GET /menu:
     ```json
     [
         {
-            "id": 2,
-            "name": "Laravel convention 2023",
-            "createdAt": "2023-04-20T07:01:14.000000Z",
-            "workshops": [
+            "id": 1,
+            "name": "All events",
+            "url": "/events",
+            "parentId": null,
+            "createdAt": "2021-04-27T15:35:15.000000Z",
+            "children": [
                 {
                     "id": 2,
-                    "start": "2023-10-21 10:00:00",
-                    "end": "2023-10-21 18:00:00",
-                    "eventId": 2,
-                    "name": "The new Eloquent - load more with less",
-                    "createdAt": "2021-04-20T07:01:14.000000Z",
-                },
-                {
-                    "id": 3,
-                    "start": "2023-11-21 09:00:00",
-                    "end": "2023-11-21 17:00:00",
-                    "eventId": 2,
-                    "name": "AutoEx - handles exceptions 100% automatic",
-                    "createdAt": "2021-04-20T07:01:14.000000Z",
-                }
-            ]
-        },
-        {
-            "id": 3,
-            "name": "React convention 2023",
-            "createdAt": "2023-04-20T07:01:14.000000Z",
-            "workshops": [
-                {
-                    "id": 4,
-                    "start": "2023-08-21 10:00:00",
-                    "end": "2023-08-21 18:00:00",
-                    "eventId": 3,
-                    "name": "#NoClass pure functional programming",
-                    "createdAt": "2021-04-20T07:01:14.000000Z",
+                    "name": "Laracon",
+                    "url": "/events/laracon",
+                    "parentId": 1,
+                    "createdAt": "2021-04-27T15:35:15.000000Z",
+                    "children": [
+                        {
+                            "id": 3,
+                            "name": "Illuminate your knowledge of the laravel code base",
+                            "url": "/events/laracon/workshops/illuminate",
+                            "parentId": 2,
+                            "createdAt": "2021-04-27T15:35:15.000000Z",
+                            "children": []
+                        },
+                        {
+                            "id": 4,
+                            "name": "The new Eloquent - load more with less",
+                            "url": "/events/laracon/workshops/eloquent",
+                            "parentId": 2,
+                            "createdAt": "2021-04-27T15:35:15.000000Z",
+                            "children": []
+                        }
+                    ]
                 },
                 {
                     "id": 5,
-                    "start": "2023-08-21 09:00:00",
-                    "end": "2023-08-21 17:00:00",
-                    "eventId": 3,
-                    "name": "Navigating the function jungle",
-                    "createdAt": "2021-04-20T07:01:14.000000Z",
+                    "name": "Reactcon",
+                    "url": "/events/reactcon",
+                    "parentId": 1,
+                    "createdAt": "2021-04-27T15:35:15.000000Z",
+                    "children": [
+                        {
+                            "id": 6,
+                            "name": "#NoClass pure functional programming",
+                            "url": "/events/reactcon/workshops/noclass",
+                            "parentId": 5,
+                            "createdAt": "2021-04-27T15:35:15.000000Z",
+                            "children": []
+                        },
+                        {
+                            "id": 7,
+                            "name": "Navigating the function jungle",
+                            "url": "/events/reactcon/workshops/jungle",
+                            "parentId": 5,
+                            "createdAt": "2021-04-27T15:35:15.000000Z",
+                            "children": []
+                        }
+                    ]
                 }
             ]
         }
     ]
-    ```
-     */
-    async getFutureEventWithWorkshops() {
-      const subQuery = this.eventRepository.createQueryBuilder('event')
-        .leftJoin('event.workshops', 'workshop')
-        .select(['event.id', 'MIN(workshop.start)', 'event.createdAt'])
-        .groupBy('event.id');
-    
-      return await this.eventRepository.createQueryBuilder('event')
-        .leftJoinAndSelect('event.workshops', 'workshop')
-        .where('workshop.start > :now', { now: new Date() })
-        .andWhere(x => {
-          const subQueryAlias = 'sub_query';
-          const subQueryCondition = `
-            event.id = ${subQueryAlias}.id
-            AND workshop.start = ${subQueryAlias}.min
-            AND event.createdAt = ${subQueryAlias}.createdAt
-          `;
-          return `EXISTS(${subQuery.subQuery()} ${subQueryAlias} WHERE ${subQueryCondition})`;
-        })
-        .orderBy('event.id')
-        .getMany();
-    }
+  */
+
+    async getMenuItems(): Promise<MenuItem[]> {
+        const allItems = await this.menuItemRepository.find();
+      
+        const topLevelItems = allItems.filter(item => !item.parentId);
+      
+        const buildMenu = (items: MenuItem[]): MenuItem[] => {
+          return items.map(item => {
+            const children = allItems.filter(child => child.parentId === item.id);
+            if (children.length) {
+              item.children = buildMenu(children);
+            }
+            return item;
+          });
+        };
+      
+        return buildMenu(topLevelItems);
+      }
 }
