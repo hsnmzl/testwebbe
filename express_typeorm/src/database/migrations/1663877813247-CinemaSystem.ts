@@ -30,9 +30,43 @@ export class CinemaSystem1663877813247 implements MigrationInterface {
    * As a user I want to know where I'm sitting on my ticket
    * As a cinema owner I dont want to configure the seating for every show
    */
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    throw new Error('TODO: implement migration in task 4');
-  }
+   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.createTable('movies', {
+        id: { type: 'integer', primary: true, generated: true },
+        name: { type: 'varchar', length: '255' },
+        description: { type: 'text' },
+    });
+
+    await queryRunner.createTable('shows', {
+        id: { type: 'integer', primary: true, generated: true },
+        movieId: { type: 'integer' },
+        startTime: { type: 'timestamp' },
+        endTime: { type: 'timestamp' },
+        roomId: { type: 'integer' },
+        price: { type: 'float' },
+    });
+
+    await queryRunner.createTable('rooms', {
+        id: { type: 'integer', primary: true, generated: true },
+        name: { type: 'varchar', length: '255' },
+        capacity: { type: 'integer' },
+    });
+
+    await queryRunner.createTable('seats', {
+        id: { type: 'integer', primary: true, generated: true },
+        roomId: { type: 'integer' },
+        row: { type: 'integer' },
+        number: { type: 'integer' },
+        seatType: { type: 'varchar', length: '255' },
+    });
+
+    await queryRunner.createTable('bookings', {
+        id: { type: 'integer', primary: true, generated: true },
+        showId: { type: 'integer' },
+        seatId: { type: 'integer' },
+        userId: { type: 'integer' },
+    });
+}
 
   public async down(queryRunner: QueryRunner): Promise<void> {}
 }
