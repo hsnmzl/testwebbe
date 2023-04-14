@@ -91,9 +91,11 @@ export class EventsService {
     ```
      */
 
-  async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
-  }
+    async getEventsWithWorkshops() {
+      return await this.eventRepository.createQueryBuilder('event')
+        .leftJoinAndSelect('event.workshops', 'workshop')
+        .getMany();
+    }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
     Requirements:
@@ -161,7 +163,25 @@ export class EventsService {
     ]
     ```
      */
-  async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
-  }
+    async getFutureEventWithWorkshops() {
+      const subQuery = this.eventRepository.createQueryBuilder('event')
+        .leftJoin('event.workshops', 'workshop')
+        .select(['event.id', 'MIN(workshop.start)', 'event.createdAt'])
+        .groupBy('event.id');
+    
+      return await this.eventRepository.createQueryBuilder('event')
+        .leftJoinAndSelect('event.workshops', 'workshop')
+        .where('workshop.start > :now', { now: new Date() })
+        .andWhere(x => {
+          const subQueryAlias = 'sub_query';
+          const subQueryCondition = `
+            event.id = ${subQueryAlias}.id
+            AND workshop.start = ${subQueryAlias}.min
+            AND event.createdAt = ${subQueryAlias}.createdAt
+          `;
+          return `EXISTS(${subQuery.subQuery()} ${subQueryAlias} WHERE ${subQueryCondition})`;
+        })
+        .orderBy('event.id')
+        .getMany();
+    }
 }
